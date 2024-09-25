@@ -45,7 +45,7 @@ module uart_tx #(
     reg parity_bit;
 
     // State machine
-    always @(posedge clk or posedge reset) begin
+    always @(posedge tick or posedge reset) begin
         if (reset) begin
             state <= IDLE;
             bit_counter <= 0;
@@ -55,16 +55,14 @@ module uart_tx #(
             busy <= 0;
         end else begin
             state <= next_state;
-            if (tick) begin
-                case (state)
-                    START, DATA, PARITY, STOP: begin
-                        bit_counter <= bit_counter + 1;
-                    end
-                    default: begin
-                        bit_counter <= 0;
-                    end
-                endcase
-            end
+            case (state)
+                START, DATA, PARITY, STOP: begin
+                    bit_counter <= bit_counter + 1;
+                end
+                default: begin
+                    bit_counter <= 0;
+                end
+            endcase
         end
     end
 
