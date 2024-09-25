@@ -18,6 +18,7 @@ module uart_rx_tb;
     reg rx;
     wire [N-1:0] data_out;
     wire valid;
+    wire tick;
 
     // Instantiate uart_rx
     uart_rx #(
@@ -27,12 +28,18 @@ module uart_rx_tb;
         .BAUD_RATE(BAUD_RATE),
         .CLK_FREQ(CLK_FREQ)
     ) uut (
-        .clk(clk),
+        .tick(tick),
         .reset(reset),
         .rx(rx),
         .data_out(data_out),
         .valid(valid)
     );
+
+    baudrate_generator(
+        .clk(clk),
+        .reset(reset),
+        .tick(tick)
+    )
 
     // Clock generation
     initial begin

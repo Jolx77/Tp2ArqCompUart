@@ -5,23 +5,12 @@ module uart_rx #(
     parameter BAUD_RATE = 9600,  // Baud rate
     parameter CLK_FREQ = 50000000  // Clock frequency
 )(
-    input wire clk,
+    input wire tick,
     input wire reset,
     input wire rx,
     output reg [N-1:0] data_out,
     output reg valid
 );
-
-    // Instantiate baudrate generator
-    wire tick;
-    baudrate_generator #(
-        .BAUD_RATE(BAUD_RATE),
-        .CLK_FREQ(CLK_FREQ)
-    ) baud_gen (
-        .clk(clk),
-        .reset(reset),
-        .tick(tick)
-    );
 
     localparam integer BIT_COUNTER_WIDTH = $clog2(N + M + PARITY_EN);
 
