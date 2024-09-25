@@ -49,6 +49,16 @@ module uart_rx #(
             valid <= 0;
         end else begin
             state <= next_state;
+            if (tick) begin
+                case (state)
+                    START, DATA, PARITY, STOP: begin
+                        bit_counter <= bit_counter + 1;
+                    end
+                    default: begin
+                        bit_counter <= 0;
+                    end
+                endcase
+            end
         end
     end
 
@@ -61,14 +71,13 @@ module uart_rx #(
                 end
             end
             START: begin
-                if (tick) begin
+                if (bit_counter == (CYCLES_PER_BIT / 2 - 1)) begin
                     next_state = DATA;
                 end
             end
             DATA: begin
-                if (tick) begin
+                if (bit_counter == (CYCLES_PER_BIT - 1)) begin
                     shift_reg = {rx, shift_reg[N-1:1]};
-                    bit_counter = bit_counter + 1;
                     if (bit_counter == N-1) begin
                         if (PARITY_EN) begin
                             next_state = PARITY;
@@ -79,14 +88,13 @@ module uart_rx #(
                 end
             end
             PARITY: begin
-                if (tick) begin
+                if (bit_counter == (CYCLES_PER_BIT - 1)) begin
                     // Handle parity bit if needed
                     next_state = STOP;
                 end
             end
             STOP: begin
-                if (tick) begin
-                    bit_counter = bit_counter + 1;
+                if (bit_counter == (CYCLES_PER_BIT - 1)) begin
                     if (bit_counter == M) begin
                         next_state = IDLE;
                         data_out = shift_reg;

@@ -55,6 +55,16 @@ module uart_tx #(
             busy <= 0;
         end else begin
             state <= next_state;
+            if (tick) begin
+                case (state)
+                    START, DATA, PARITY, STOP: begin
+                        bit_counter <= bit_counter + 1;
+                    end
+                    default: begin
+                        bit_counter <= 0;
+                    end
+                endcase
+            end
         end
     end
 
@@ -79,7 +89,6 @@ module uart_tx #(
                 if (tick) begin
                     tx = shift_reg[0];
                     shift_reg = shift_reg >> 1;
-                    bit_counter = bit_counter + 1;
                     if (bit_counter == N-1) begin
                         if (PARITY_EN) begin
                             next_state = PARITY;
@@ -98,7 +107,6 @@ module uart_tx #(
             STOP: begin
                 if (tick) begin
                     tx = 1;  // Stop bit
-                    bit_counter = bit_counter + 1;
                     if (bit_counter == M) begin
                         next_state = IDLE;
                         busy = 0;
