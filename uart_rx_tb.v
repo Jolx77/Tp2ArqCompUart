@@ -10,7 +10,10 @@ module uart_rx_tb;
     parameter CLK_FREQ = 50000000;
 
     // Clock period
-    localparam CLK_PERIOD = 20;  // 50 MHz clock
+    integer CLK_PERIOD = 20;  // 50 MHz clock
+
+    // Calculate baud period
+    localparam integer BAUD_PERIOD = (1 / BAUD_RATE)/1000000000;
 
     // Signals
     reg clk;
@@ -28,18 +31,19 @@ module uart_rx_tb;
         .BAUD_RATE(BAUD_RATE),
         .CLK_FREQ(CLK_FREQ)
     ) uut (
-        .tick(tick),
+        .clk(clk),
+        //.tick(tick),
         .reset(reset),
         .rx(rx),
         .data_out(data_out),
         .valid(valid)
     );
 
-    baudrate_generator(
+    baudrate_generator baudrate_gen(
         .clk(clk),
         .reset(reset),
         .tick(tick)
-    )
+    ) ;
 
     // Clock generation
     initial begin
@@ -61,19 +65,21 @@ module uart_rx_tb;
         #(10 * CLK_PERIOD);
 
         // Simulate receiving a byte (0x55 = 01010101)
-        send_byte(8'h55);
+        //rx = 0;
+        send_byte(8'h15);
+        send_byte(8'h11);
 
         // Wait for the byte to be received
-        #(100 * CLK_PERIOD);
+        #(300 * CLK_PERIOD);
 
         // Simulate receiving another byte (0xAA = 10101010)
-        send_byte(8'hAA);
+        //send_byte(8'hAA);
 
         // Wait for the byte to be received
-        #(100 * CLK_PERIOD);
+        #(200 * CLK_PERIOD);
 
         // Finish simulation
-        #(100 * CLK_PERIOD);
+        #(50005 * CLK_PERIOD);
         $finish;
     end
 
@@ -83,21 +89,21 @@ module uart_rx_tb;
         begin
             // Start bit
             rx = 0;
-            #(BAUD_PERIOD);
+            //#(BAUD_PERIOD);
+            @(posedge tick);
 
             // Data bits
             for (i = 0; i < N; i = i + 1) begin
                 rx = byte[i];
-                #(BAUD_PERIOD);
+                //#(BAUD_PERIOD);
+                @(posedge tick);
             end
 
             // Stop bit
             rx = 1;
-            #(BAUD_PERIOD);
+            //#(BAUD_PERIOD);
+            @(posedge tick);
         end
     endtask
-
-    // Calculate baud period
-    localparam integer BAUD_PERIOD = CLK_FREQ / BAUD_RATE;
 
 endmodule

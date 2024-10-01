@@ -27,15 +27,16 @@ module uart_tx #(
     localparam integer BIT_COUNTER_WIDTH = $clog2(N + M + PARITY_EN);
 
     // State definitions
-    typedef enum reg [2:0] {
-        IDLE,
-        START,
-        DATA,
-        PARITY,
-        STOP
-    } state_t;
+    localparam [2:0] IDLE = 000,
+                    START = 001,
+                    DATA = 010,
+                    PARITY = 011,
+                    STOP = 100;
+    
 
-    state_t state, next_state;
+
+    reg[2:0] state = IDLE;
+    reg[2:0] next_state;
 
     // Shift register
     reg [N-1:0] shift_reg;

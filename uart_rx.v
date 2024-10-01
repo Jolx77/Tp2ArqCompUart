@@ -7,42 +7,50 @@ module uart_rx #(
 )(
     input wire tick,
     input wire reset,
+    input wire clk,
     input wire rx,
     output reg [N-1:0] data_out,
     output reg valid
 );
 
-    localparam integer BIT_COUNTER_WIDTH = $clog2(N + M + PARITY_EN);
+    localparam integer CYCLES_PER_BIT = CLK_FREQ / BAUD_RATE;
 
-    // State definitions
-    typedef enum reg [2:0] {
-        IDLE,
-        START,
-        DATA,
-        PARITY,
-        STOP
-    } state_t;
+    localparam integer baud_counter_WIDTH = $clog2(CYCLES_PER_BIT);
 
-    state_t state, next_state;
+    localparam [2:0] IDLE = 000,
+                    START = 001,
+                    DATA = 010,
+                    PARITY = 011,
+                    STOP = 100;
+    
+
+
+    reg[2:0] state = IDLE;
+    reg[2:0] next_state;
 
     // Shift register
     reg [N-1:0] shift_reg;
-    reg [BIT_COUNTER_WIDTH-1:0] bit_counter;
+    reg [baud_counter_WIDTH-1:0] baud_counter;
+
+    integer bit_counter;
 
     // State machine
-    always @(posedge tick or posedge reset) begin
+    always @(posedge reset or posedge clk) begin
         if (reset) begin
             state <= IDLE;
+            baud_counter <= 0;
             bit_counter <= 0;
             shift_reg <= 0;
             valid <= 0;
-        end else begin
+            data_out <= 0;
+        end else if(clk) begin
             state <= next_state;
             case (state)
                 START, DATA, PARITY, STOP: begin
-                    bit_counter <= bit_counter + 1;
+                    baud_counter <= baud_counter + 1;
                 end
                 default: begin
+                    baud_counter <= 0;
                     bit_counter <= 0;
                 end
             endcase
@@ -58,13 +66,16 @@ module uart_rx #(
                 end
             end
             START: begin
-                if (bit_counter == (CYCLES_PER_BIT / 2 - 1)) begin
+                if (baud_counter == ((CYCLES_PER_BIT / 2) - 1)) begin
+                    baud_counter = 0;
                     next_state = DATA;
                 end
             end
             DATA: begin
-                if (bit_counter == (CYCLES_PER_BIT - 1)) begin
+                if (baud_counter == (CYCLES_PER_BIT - 1)) begin
                     shift_reg = {rx, shift_reg[N-1:1]};
+                    bit_counter = bit_counter + 1;
+                    baud_counter = 0;
                     if (bit_counter == N-1) begin
                         if (PARITY_EN) begin
                             next_state = PARITY;
@@ -75,14 +86,18 @@ module uart_rx #(
                 end
             end
             PARITY: begin
-                if (bit_counter == (CYCLES_PER_BIT - 1)) begin
+                if (baud_counter == (CYCLES_PER_BIT - 1)) begin
                     // Handle parity bit if needed
+                    baud_counter = 0;
                     next_state = STOP;
                 end
             end
             STOP: begin
-                if (bit_counter == (CYCLES_PER_BIT - 1)) begin
-                    if (bit_counter == M) begin
+                if (baud_counter == (CYCLES_PER_BIT - 1)) begin
+                    bit_counter = bit_counter + 1;
+                    baud_counter = 0;
+                    if (bit_counter == N + M + PARITY_EN) begin
+                        shift_reg = {0, shift_reg[N-1:1]};
                         next_state = IDLE;
                         data_out = shift_reg;
                         valid = 1;
