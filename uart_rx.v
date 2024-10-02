@@ -61,6 +61,7 @@ module uart_rx #(
         next_state = state;
         case (state)
             IDLE: begin
+                valid = 0;
                 if (rx == 0) begin
                     next_state = START;
                 end

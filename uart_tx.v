@@ -13,16 +13,10 @@ module uart_tx #(
     output reg busy
 );
 
-    // Instantiate baudrate generator
-    wire tick;
-    baudrate_generator #(
-        .BAUD_RATE(BAUD_RATE),
-        .CLK_FREQ(CLK_FREQ)
-    ) baud_gen (
-        .clk(clk),
-        .reset(reset),
-        .tick(tick)
-    );
+    localparam integer CYCLES_PER_BIT = CLK_FREQ / BAUD_RATE;
+    localparam integer baud_counter_WIDTH = $clog2(CYCLES_PER_BIT);
+
+    reg [baud_counter_WIDTH-1:0] baud_counter; //counts for tick
 
     localparam integer BIT_COUNTER_WIDTH = $clog2(N + M + PARITY_EN);
 
@@ -46,7 +40,7 @@ module uart_tx #(
     reg parity_bit;
 
     // State machine
-    always @(posedge tick or posedge reset) begin
+    always @(posedge clk or posedge reset) begin
         if (reset) begin
             state <= IDLE;
             bit_counter <= 0;
@@ -54,13 +48,15 @@ module uart_tx #(
             parity_bit <= 0;
             tx <= 1;
             busy <= 0;
+            baud_counter <= 0;
         end else begin
             state <= next_state;
             case (state)
                 START, DATA, PARITY, STOP: begin
-                    bit_counter <= bit_counter + 1;
+                    baud_counter <= baud_counter + 1;
                 end
                 default: begin
+                    baud_counter <= 0;
                     bit_counter <= 0;
                 end
             endcase
@@ -79,15 +75,18 @@ module uart_tx #(
                 end
             end
             START: begin
-                if (tick) begin
+                tx = 0;  // Start bit
+                if (baud_counter == (CYCLES_PER_BIT - 1)) begin
+                    baud_counter = 0;
                     next_state = DATA;
-                    tx = 0;  // Start bit
                 end
             end
             DATA: begin
-                if (tick) begin
-                    tx = shift_reg[0];
+                if (baud_counter == (CYCLES_PER_BIT - 1)) begin
+                    baud_counter = 0;
                     shift_reg = shift_reg >> 1;
+                    tx = shift_reg[0];
+                    bit_counter = bit_counter + 1;
                     if (bit_counter == N-1) begin
                         if (PARITY_EN) begin
                             next_state = PARITY;
@@ -98,15 +97,18 @@ module uart_tx #(
                 end
             end
             PARITY: begin
-                if (tick) begin
+                if (baud_counter == (CYCLES_PER_BIT - 1)) begin
+                    baud_counter = 0;
                     tx = parity_bit;
                     next_state = STOP;
                 end
             end
             STOP: begin
-                if (tick) begin
+                if (baud_counter == (CYCLES_PER_BIT - 1)) begin
+                    baud_counter = 0;
                     tx = 1;  // Stop bit
-                    if (bit_counter == M) begin
+                    bit_counter = bit_counter + 1;
+                    if (bit_counter == N + M PARITY_EN) begin
                         next_state = IDLE;
                         busy = 0;
                     end
