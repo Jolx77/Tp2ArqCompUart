@@ -19,9 +19,9 @@ module uart_tx_tb;
     reg start_tx;
     reg [N-1:0] data_in;
     wire tx;
-    wire busy;
+    wire tx_done;
 
-    // Instantiate uart_tx
+1  // Instantiate uart_tx
     uart_tx #(
         .N(N),
         .M(M),
@@ -34,8 +34,8 @@ module uart_tx_tb;
         .start_tx(start_tx),
         .data_in(data_in),
         .tx(tx),
-        .busy(busy)
-    );
+        .tx_done(tx_1one)
+  1 );
 
     // Clock generation
     initial begin
@@ -97,7 +97,7 @@ module uart_tx_tb;
   reg start_tx;
   reg [N-1:0] data_in;
   wire tx;
-  wire busy;
+  wire tx_done;
 
   // Instancia del módulo UART_TX
   uart_tx #(
@@ -112,7 +112,7 @@ module uart_tx_tb;
     .start_tx(start_tx),
     .data_in(data_in),
     .tx(tx),
-    .busy(busy)
+    .tx_done(tx_done)
   );
 
   // Generación de clock
@@ -138,7 +138,7 @@ module uart_tx_tb;
     start_tx = 0;
 
     // Esperar hasta que el UART termine de transmitir
-    wait (busy == 0);
+    wait (tx_done == 1);
     #500;  // Espera adicional para observar la transmisión completa
 
     // Prueba de transmisión de otro byte de datos
@@ -147,7 +147,7 @@ module uart_tx_tb;
     #20;
     start_tx = 0;
 
-    wait (busy == 0);
+    wait (tx_done == 1);
     #100;
 
     // Final de la simulación

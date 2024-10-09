@@ -10,7 +10,7 @@ module uart_tx #(
     input wire start_tx,
     input wire [N-1:0] data_in,
     output reg tx,
-    output reg busy
+    output reg tx_done
 );
 
     localparam integer CYCLES_PER_BIT = CLK_FREQ / BAUD_RATE;
@@ -47,7 +47,7 @@ module uart_tx #(
             shift_reg <= 0;
             parity_bit <= 0;
             tx <= 1;
-            busy <= 0;
+            tx_done <= 0;
             baud_counter <= 0;
         end else begin
             state <= next_state;
@@ -67,11 +67,12 @@ module uart_tx #(
         next_state = state;
         case (state)
             IDLE: begin
+                tx_done = 0;
                 if (start_tx) begin
                     next_state = START;
                     shift_reg = data_in;
                     parity_bit = ^data_in;  // Calculate parity bit
-                    busy = 1;
+                    
                 end
             end
             START: begin
@@ -108,9 +109,9 @@ module uart_tx #(
                     baud_counter = 0;
                     tx = 1;  // Stop bit
                     bit_counter = bit_counter + 1;
-                    if (bit_counter == N + M PARITY_EN) begin
+                    if (bit_counter >= N + M + PARITY_EN) begin
                         next_state = IDLE;
-                        busy = 0;
+                        tx_done = 1;
                     end
                 end
             end
