@@ -3,13 +3,15 @@ module top_t #(
     parameter CLK_FREQ = 50000000,
     parameter BAUD_RATE = 9600
 )(
-    input wire i_data_rx[N-1:0],
+    input wire [N-1:0]i_data_rx,
     input wire i_c,
     input wire clk,
     input wire reset,
     //input wire rx,
-    output reg tx
+    output wire tx
 );
+
+    localparam integer CYCLES_PER_BIT = CLK_FREQ / BAUD_RATE;
 
     // Señales internas
     wire [N-1:0] data_rx;
@@ -17,7 +19,10 @@ module top_t #(
     wire rx_valid, tx_start, tx_done;
     wire [N-1:0] alu_result;
     wire [N-1:0] o_A, o_B, o_op;
-    reg rx;
+    wire rx;
+    reg tx_start2;
+    wire tx_done2; 
+    reg [N-1:0]i_data_rx2;
     //wire rx_i_aux[N-1:0];
 
     // UART Receiver
@@ -45,6 +50,19 @@ module top_t #(
         .data_in(data_tx),
         .tx(tx),
         .tx_done(tx_done)
+    );
+
+    uart_tx #(
+        .N(N),
+        .BAUD_RATE(BAUD_RATE),
+        .CLK_FREQ(CLK_FREQ)
+    ) uart_transmitter2 (
+        .clk(clk),
+        .reset(reset),
+        .start_tx(tx_start2),
+        .data_in(i_data_rx2),
+        .tx(rx),
+        .tx_done(tx_done2)
     );
 
     // Interfaz
@@ -80,34 +98,19 @@ module top_t #(
         .tick(tick)
     ) ;
 
-    integer i;
+    integer c_triggered;
+
 
     always @(posedge clk) begin
-        if(i_c)begin
-            //rx_i_aux = i_data_rx;
-            //if(i_data_rx != 2'b11) begin
-                rx = 0;
-                @(posedge tick);
-                for(i = 0; i < N; i = i + 1)begin
-                    rx = i_data_rx[i];
-                    @(posedge tick);
-                end
-                rx = 1;
-                @(posedge tick);
-            //end
-            /*else begin
-                rx = 0;
-                @(posedge tick);
-                for(i = 0; i < N - 2; i = i + 1)begin
-                    rx = i_data_rx[i];
-                    @(posedge tick);
-                end
-                rx = 1;
-                @(posedge tick);
-            end*/
+        if(i_c == 1 && c_triggered == 0)begin
+            i_data_rx2 = i_data_rx;
+            tx_start2 = 1;
+            c_triggered = 1;
+        end
+        else if(tx_done2 == 1) begin
+            c_triggered = 0;
         end
     end
-
     //assign rx_i_aux = i_data_rx;
 
 

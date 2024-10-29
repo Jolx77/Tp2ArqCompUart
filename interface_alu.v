@@ -12,15 +12,17 @@ module interface #(
     input wire i_tx_done,
     input wire rst,
     input wire clk,
-    output reg [N-1:0] o_A,
-    output reg [N-1:0] o_B,
-    output reg [N-1:0] o_op,
-    output reg [N-1:0] o_tx,
-    output reg o_tx_start 
+    output wire [N-1:0] o_A,
+    output wire [N-1:0] o_B,
+    output wire [N-1:0] o_op,
+    output wire [N-1:0] o_tx,
+    output wire o_tx_start 
 );
 
-    reg [N-1:0] reg_A, reg_B, reg_op;
+    reg [N-1:0] reg_A, reg_B, reg_op, o_A_reg, o_B_reg, o_op_reg, o_tx_reg;
     reg check_A, check_B, check_OP;
+
+    reg o_tx_start_reg;
 
     localparam [2:0] IDLE = 3'b000, 
                      WAIT_A = 3'b001, 
@@ -35,20 +37,15 @@ module interface #(
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             state <= IDLE;
-            o_A <= 0;
-            o_B <= 0;
-            o_op <= 0;
-            o_tx <= 0;
-            o_tx_start <= 0;
-            reg_A <= 0;
-            reg_B <= 0;
-            reg_op <= 0;
-            check_A <= 0;
-            check_B <= 0;
-            check_OP <= 0;
+            o_A_reg <= 0;
+            o_B_reg <= 0;
+            o_op_reg <= 0;
         end
         else begin 
             state <= next_state;
+            o_A_reg <= reg_A;
+            o_B_reg <= reg_B;
+            o_op_reg <= reg_op;
         end
     end 
 
@@ -56,6 +53,7 @@ module interface #(
         next_state = state;
         case (state) 
             IDLE: begin
+                o_tx_start_reg = 0;
                 if (i_rx_valid) begin
                     case (i_data_rx)
                         A: next_state = WAIT_A;
@@ -89,8 +87,8 @@ module interface #(
             end
             CHECK_REG: begin
                 if (check_A && check_B && check_OP) begin
-                    o_tx = i_data_tx;
-                    o_tx_start = 1;
+                    o_tx_reg = i_data_tx;
+                    o_tx_start_reg = 1;
                     next_state = TX_RESULT;
                 end
                 else begin
@@ -99,24 +97,15 @@ module interface #(
             end
             TX_RESULT: begin
                 if (i_tx_done) begin
-                    o_tx_start = 0;
+                    o_tx_start_reg = 0;
                     next_state = IDLE;
                 end
             end
         endcase
     end
-
-    // Asignaciones de salida de los registros
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            o_A <= 0;
-            o_B <= 0;
-            o_op <= 0;
-        end else begin
-            o_A <= reg_A;
-            o_B <= reg_B;
-            o_op <= reg_op;
-        end
-    end
-
+    assign o_A = o_A_reg;
+    assign o_B = o_B_reg;
+    assign o_op = o_op_reg;
+    assign o_tx = o_tx_reg;
+    assign o_tx_start = o_tx_start_reg;
 endmodule

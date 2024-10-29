@@ -32,7 +32,7 @@ module uart_rx_tb;
         .CLK_FREQ(CLK_FREQ)
     ) uut (
         .clk(clk),
-        //.tick(tick),
+        .tick(tick),
         .reset(reset),
         .rx(rx),
         .data_out(data_out),
@@ -67,6 +67,7 @@ module uart_rx_tb;
         // Simulate receiving a byte (0x55 = 01010101)
         //rx = 0;
         send_byte(8'h15);
+        #100;
         send_byte(8'h11);
 
         // Wait for the byte to be received
@@ -86,23 +87,29 @@ module uart_rx_tb;
     // Task to send a byte
     task send_byte(input [7:0] byte);
         integer i;
+        integer j;
         begin
             // Start bit
             rx = 0;
             //#(BAUD_PERIOD);
-            @(posedge tick);
-
+            for(j = 0;j < 16;j = j+1) begin
+                @(posedge tick);
+            end
             // Data bits
             for (i = 0; i < N; i = i + 1) begin
                 rx = byte[i];
                 //#(BAUD_PERIOD);
-                @(posedge tick);
+                for(j = 0;j < 16;j = j+1) begin
+                    @(posedge tick);
+                end
             end
 
             // Stop bit
             rx = 1;
             //#(BAUD_PERIOD);
-            @(posedge tick);
+            for(j = 0;j < 16;j = j+1) begin
+                @(posedge tick);
+            end
         end
     endtask
 

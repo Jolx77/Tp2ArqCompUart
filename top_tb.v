@@ -8,6 +8,7 @@ module tb_top;
     reg reset;
     reg rx;
     wire tx;
+    wire [N-1:0]data_out;
 
     // Instancia del módulo top
     top #(
@@ -18,8 +19,15 @@ module tb_top;
         .clk(clk),
         .reset(reset),
         .rx(rx),
-        .tx(tx)
+        .tx(tx),
+        .data_out(data_out)
     );
+
+    baudrate_generator baudrate_gen(
+        .clk(clk),
+        .reset(reset),
+        .tick(tick)
+    ) ;
 
     // Reloj de 50 MHz
     initial begin
@@ -33,7 +41,7 @@ module tb_top;
         rx = 1;  // Inicialmente en estado alto
         #100;
         reset = 0;
-
+        #10;
         // Envío de un dato 'A'
         send_byte(8'h1);
         #900000;  // Esperar para completar la transmisión
@@ -55,7 +63,7 @@ module tb_top;
         #600000;
 
         // Envío de valor de operación (suma, 0b100000)
-        send_byte(8'h20);
+        send_byte(8'h20); // 0010 0000
         #600000;
 
         // Envío de comando para ejecutar operación y transmitir resultado
@@ -67,20 +75,28 @@ module tb_top;
     // Tarea para enviar un byte
     task send_byte(input [7:0] data);
         integer i;
+        integer j;
         begin
+            @(posedge clk);
             // Start bit
             rx = 0;
-            #104160;  // 1 bit period for 9600 baud rate
+            for(j = 0;j < 16;j = j+1) begin
+                @(posedge tick);
+            end
 
             // Data bits
             for (i = 0; i < 8; i = i + 1) begin
                 rx = data[i];
-                #104160;  // 1 bit period
+                for(j = 0;j < 16;j = j+1) begin
+                    @(posedge tick);
+                end
             end
 
             // Stop bit
             rx = 1;
-            #104160;
+            for(j = 0;j < 16;j = j+1) begin
+                @(posedge tick);
+            end
         end
     endtask
 

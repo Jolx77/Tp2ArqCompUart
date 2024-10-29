@@ -98,7 +98,7 @@ module uart_tx_tb;
   reg [N-1:0] data_in;
   wire tx;
   wire tx_done;
-
+  wire tick;
   // Instancia del módulo UART_TX
   uart_tx #(
     .N(N),
@@ -107,6 +107,7 @@ module uart_tx_tb;
     .BAUD_RATE(BAUD_RATE),
     .CLK_FREQ(CLK_FREQ)
   ) uut (
+    .tick(tick),
     .clk(clk),
     .reset(reset),
     .start_tx(start_tx),
@@ -114,6 +115,12 @@ module uart_tx_tb;
     .tx(tx),
     .tx_done(tx_done)
   );
+
+  baudrate_generator baudrate_gen(
+        .clk(clk),
+        .reset(reset),
+        .tick(tick)
+    ) ;
 
   // Generación de clock
   always #10 clk = ~clk;  // 50 MHz clock
