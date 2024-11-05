@@ -16,7 +16,8 @@ module interface #(
     output wire [N-1:0] o_B,
     output wire [N-1:0] o_op,
     output wire [N-1:0] o_tx,
-    output wire o_tx_start 
+    output wire o_tx_start
+    //output wire [4:0] state_output
 );
 
     reg [N-1:0] reg_A, reg_B, reg_op, o_A_reg, o_B_reg, o_op_reg, o_tx_reg;
@@ -34,7 +35,9 @@ module interface #(
     reg [2:0] state = IDLE; 
     reg [2:0] next_state;
 
-    always @(posedge clk or posedge rst) begin
+    reg [4:0]state_output_reg;
+
+    always @(posedge clk ) begin
         if (rst) begin
             state <= IDLE;
             o_A_reg <= 0;
@@ -54,7 +57,7 @@ module interface #(
         case (state) 
             IDLE: begin
                 o_tx_start_reg = 0;
-                if (i_rx_valid) begin
+                if (i_rx_valid == 1) begin
                     case (i_data_rx)
                         A: next_state = WAIT_A;
                         B: next_state = WAIT_B;
@@ -66,40 +69,48 @@ module interface #(
             end
             WAIT_A: begin
                 if (i_rx_valid == 1) begin
+                    state_output_reg[0] = 1;
                     reg_A = i_data_rx;
                     check_A = 1;
                     next_state = IDLE;
                 end
             end
             WAIT_B: begin
-                if (i_rx_valid) begin
+                if (i_rx_valid == 1) begin
+                    state_output_reg[1] = 1;
                     reg_B = i_data_rx;
                     check_B = 1;
                     next_state = IDLE;
                 end
             end
             WAIT_OP: begin
-                if (i_rx_valid) begin
+                if (i_rx_valid == 1) begin
+                    state_output_reg[2] = 1;
                     reg_op = i_data_rx;
                     check_OP = 1;
                     next_state = IDLE;
                 end
             end
             CHECK_REG: begin
-                if (check_A && check_B && check_OP) begin
+                //if (check_A && check_B && check_OP) begin
+                    state_output_reg[3] = 1;
                     o_tx_reg = i_data_tx;
                     o_tx_start_reg = 1;
                     next_state = TX_RESULT;
-                end
-                else begin
+                //end
+                //else begin
+                    next_state = IDLE;
+                //end
+            end
+            TX_RESULT: begin
+                o_tx_start_reg = 0;
+                if (i_tx_done == 1) begin
+                    state_output_reg[4] = 1;
                     next_state = IDLE;
                 end
             end
-            TX_RESULT: begin
-                if (i_tx_done) begin
-                    o_tx_start_reg = 0;
-                    next_state = IDLE;
-                end
+            default : begin
+                next_state = IDLE;
             end
         endcase
     end
@@ -108,4 +119,6 @@ module interface #(
     assign o_op = o_op_reg;
     assign o_tx = o_tx_reg;
     assign o_tx_start = o_tx_start_reg;
+    assign state_output = state_output_reg;
+
 endmodule

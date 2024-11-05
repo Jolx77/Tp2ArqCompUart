@@ -16,7 +16,7 @@ def main():
 
         while True:
             try:
-                for i in range (0,7):
+                for i in range(0, 7):
                     # Leer la entrada del usuario
                     user_input = input("Número (0-255): ")
 
@@ -26,18 +26,20 @@ def main():
                     # Validar que esté en el rango de 0 a 255
                     if 0 <= number <= 255:
                         # Convertir el número a un byte y enviarlo
-                        i = i+1
+                        i = i + 1
                         ser.write(bytes([number]))
                         print(f"Enviando: {number}")
                     else:
                         print("Error: El número debe estar entre 0 y 255.")
 
-                 # Leer respuesta desde la FPGA si hay
+                # Leer respuesta desde la FPGA si hay
                 print("Leyendo")
                 time.sleep(0.1)  # Breve pausa para esperar la respuesta
                 if ser.in_waiting > 0:
                     received_data = ser.read(ser.in_waiting)
-                    print(f"Recibido desde FPGA: {received_data.decode('utf-8', errors='ignore')}")
+                    # Convertir cada byte recibido a formato binario
+                    received_bits = ' '.join(f'{byte:08b}' for byte in received_data)
+                    print(f"Recibido desde FPGA (en bits): {received_bits}")
 
             except ValueError:
                 print("Error: Por favor, ingresa un número válido.")
@@ -57,4 +59,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

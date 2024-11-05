@@ -28,21 +28,28 @@ set_property IOSTANDARD LVCMOS33 [get_ports {data_out[6]}]
 set_property PACKAGE_PIN V14 [get_ports {data_out[7]}] ; # LD7
 set_property IOSTANDARD LVCMOS33 [get_ports {data_out[7]}]
 
-set_property PACKAGE_PIN L1 [get_ports {state_rx[0]}] ; # LD7
-set_property IOSTANDARD LVCMOS33 [get_ports {state_rx[0]}]
-set_property PACKAGE_PIN P1 [get_ports {state_rx[1]}] ; # LD7
-set_property IOSTANDARD LVCMOS33 [get_ports {state_rx[1]}]
-set_property PACKAGE_PIN N3 [get_ports {state_rx[2]}] ; # LD7
-set_property IOSTANDARD LVCMOS33 [get_ports {state_rx[2]}]
+set_property PACKAGE_PIN L1 [get_ports {alu_output[7]}] ; # LD7
+set_property IOSTANDARD LVCMOS33 [get_ports {alu_output[7]}]
+set_property PACKAGE_PIN P1 [get_ports {alu_output[6]}] ; # LD7
+set_property IOSTANDARD LVCMOS33 [get_ports {alu_output[6]}]
+set_property PACKAGE_PIN N3 [get_ports {alu_output[5]}] ; # LD7
+set_property IOSTANDARD LVCMOS33 [get_ports {alu_output[5]}]
+set_property PACKAGE_PIN P3 [get_ports {alu_output[4]}] ; # LD7
+set_property IOSTANDARD LVCMOS33 [get_ports {alu_output[4]}]
+set_property PACKAGE_PIN U3 [get_ports {alu_output[3]}] ; # LD7
+set_property IOSTANDARD LVCMOS33 [get_ports {alu_output[3]}]
+set_property PACKAGE_PIN W3 [get_ports {alu_output[2]}] ; # LD7
+set_property IOSTANDARD LVCMOS33 [get_ports {alu_output[2]}]
+set_property PACKAGE_PIN V3 [get_ports {alu_output[1]}] ; # LD7
+set_property IOSTANDARD LVCMOS33 [get_ports {alu_output[1]}]
+set_property PACKAGE_PIN V13 [get_ports {alu_output[0]}] ; # LD7
+set_property IOSTANDARD LVCMOS33 [get_ports {alu_output[0]}]
 
 
-set_property PACKAGE_PIN P3 [get_ports {started}] ; # LD7
-set_property IOSTANDARD LVCMOS33 [get_ports {started}]
+#set_property PACKAGE_PIN U3 [get_ports {alu_output_w[]}] ; # LD7
+#set_property IOSTANDARD LVCMOS33 [get_ports {alu_output_w[]}]
 
-set_property PACKAGE_PIN U3 [get_ports {tick_o}] ; # LD7
-set_property IOSTANDARD LVCMOS33 [get_ports {tick_o}]
-
-##########################################################################
+###############################################################ar###########
 
 set_property -dict { PACKAGE_PIN B18    IOSTANDARD LVCMOS33 } [get_ports { rx }]; 
 set_property -dict { PACKAGE_PIN A18    IOSTANDARD LVCMOS33 } [get_ports { tx }];

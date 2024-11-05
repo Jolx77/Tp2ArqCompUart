@@ -1,20 +1,13 @@
 module top #(
     parameter N = 8,
-    parameter CLK_FREQ = 100000000,
-    parameter BAUD_RATE = 9600,
-    parameter COUNT_TICKS = 16,
-    parameter PARITY_EN = 0
+    parameter COUNT_TICKS = 16
 )(
     input wire clk,
     input wire reset,
     input wire rx,
     output wire tx,
     output wire [N-1:0] data_out,
-    output wire [2:0]state_rx,
-    output wire started,
-    output wire tick_o
-    //output wire rx_led,
-    //output wire tx_led
+    output wire [N-1:0]alu_output
 );
 
     // Señales internas
@@ -24,14 +17,13 @@ module top #(
     wire rx_valid, tx_start, tx_done;
     wire [N-1:0] alu_result;
     wire [N-1:0] o_A, o_B, o_op;
+    wire start;
+    //wire[N-1:0] alu_output;
 
     // UART Receiver
     uart_rx #(
         .N(N),
-        .BAUD_RATE(BAUD_RATE),
-        .CLK_FREQ(CLK_FREQ),
-        .COUNT_TICKS(COUNT_TICKS),
-        .PARITY_EN(PARITY_EN)
+        .COUNT_TICKS(COUNT_TICKS)
     ) uart_receiver (
         .state_leds(state_rx),
         .tick(tick),
@@ -46,15 +38,12 @@ module top #(
     // UART Transmitter
     uart_tx #(
         .N(N),
-        .BAUD_RATE(BAUD_RATE),
-        .CLK_FREQ(CLK_FREQ),
-        .COUNT_TICKS(COUNT_TICKS),
-        .PARITY_EN(PARITY_EN)
+        .COUNT_TICKS(COUNT_TICKS)
     ) uart_transmitter (
         .tick(tick),
         .clk(clk),
         .reset(reset),
-        .start_tx(tx_start),
+        .tx_start(tx_start),
         .data_in(data_tx),
         .tx(tx),
         .tx_done(tx_done)
@@ -81,6 +70,7 @@ module top #(
         .o_op(o_op),
         .o_tx(data_tx),
         .o_tx_start(tx_start)
+        //.state_output(state_output_w)
     );
 
     // ALU
@@ -94,7 +84,5 @@ module top #(
     );
 
     assign data_out = data_rx;
-    assign tick_o = tick;
-    //assign rx_led = rx;
-    //assign tx_led = tx;
+    assign alu_output = alu_result;
 endmodule
