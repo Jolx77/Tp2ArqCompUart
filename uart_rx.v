@@ -48,31 +48,11 @@ module uart_rx #(
             baud_counter <= 0;
             bit_counter <= 0;
             received_byte <= {N,0};
-            //data_out <= 0;
-            //bit_counter <= 0;
-            //valid <= 0;
         end else if(clk) begin
             state <= next_state;
             baud_counter <= baud_counter_reg;
             bit_counter <= bit_counter_reg;
             received_byte <= received_byte_next;
-            //baud_counter <= baud_counter_reg;
-            /*case (state)
-                START, DATA, PARITY, STOP: begin
-                    if(baud_counter_reg == 1)begin
-                        baud_counter <= 0;
-                        
-                    end
-                    else begin
-                        //baud_counter <= baud_counter + 1;
-                    end
-                    
-                end
-                default: begin
-                    baud_counter <= 0;
-                    //bit_counter <= 0;
-                end
-            endcase*/
         end
     end
 

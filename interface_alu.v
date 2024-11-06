@@ -17,12 +17,10 @@ module interface #(
     output wire [N-1:0] o_op,
     output wire [N-1:0] o_tx,
     output wire o_tx_start
-    //output wire [4:0] state_output
 );
 
     reg [N-1:0] reg_A, reg_B, reg_op, o_A_reg, o_B_reg, o_op_reg, o_tx_reg;
-    reg check_A, check_B, check_OP;
-
+    
     reg o_tx_start_reg;
 
     localparam [2:0] IDLE = 3'b000, 
@@ -92,15 +90,12 @@ module interface #(
                 end
             end
             CHECK_REG: begin
-                //if (check_A && check_B && check_OP) begin
-                    state_output_reg[3] = 1;
-                    o_tx_reg = i_data_tx;
-                    o_tx_start_reg = 1;
-                    next_state = TX_RESULT;
-                //end
-                //else begin
-                    next_state = IDLE;
-                //end
+                state_output_reg[3] = 1;
+                o_tx_reg = i_data_tx;
+                o_tx_start_reg = 1;
+                next_state = TX_RESULT;
+
+                next_state = IDLE;
             end
             TX_RESULT: begin
                 o_tx_start_reg = 0;

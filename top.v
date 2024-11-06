@@ -18,7 +18,6 @@ module top #(
     wire [N-1:0] alu_result;
     wire [N-1:0] o_A, o_B, o_op;
     wire start;
-    //wire[N-1:0] alu_output;
 
     // UART Receiver
     uart_rx #(
@@ -70,7 +69,6 @@ module top #(
         .o_op(o_op),
         .o_tx(data_tx),
         .o_tx_start(tx_start)
-        //.state_output(state_output_w)
     );
 
     // ALU
